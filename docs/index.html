@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Runway Rhythms</title>
+  <meta name="description" content="When Europe flies and what makes it late: route heatmaps, vacation forecasts, punctuality and weather-driven delays for 30 UK and EU airports.">
+  <link rel="stylesheet" href="assets/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✈</text></svg>">
+  <script src="https://cdn.jsdelivr.net/npm/plotly.js-dist-min@2.35.2/plotly.min.js"></script>
+</head>
+<body>
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">European air-traffic analytics · 30 airports</p>
+    <h1>Runway Rhythms</h1>
+    <p class="lede">When does Europe fly, how will vacation peaks reshape each route, and how much of the delay comes from the weather?</p>
+  </div>
+</header>
+
+<nav class="controls" aria-label="Dashboard filters">
+  <div class="wrap controls-row">
+    <label class="ctl">
+      <span>Departure</span>
+      <select id="origin"></select>
+    </label>
+    <button id="swap" class="swap" type="button" title="Swap departure and destination" aria-label="Swap departure and destination">⇄</button>
+    <label class="ctl">
+      <span>Destination</span>
+      <select id="dest"></select>
+    </label>
+    <div class="ctl">
+      <span>Heatmap</span>
+      <div class="seg" role="radiogroup" data-key="kind">
+        <button role="radio" data-v="dh" aria-checked="true">Weekday × Hour</button>
+        <button role="radio" data-v="md" aria-checked="false">Month × Weekday</button>
+      </div>
+    </div>
+    <div class="ctl">
+      <span>Period</span>
+      <div class="seg" role="radiogroup" data-key="period">
+        <button role="radio" data-v="all" aria-checked="true">All year</button>
+        <button role="radio" data-v="vac" aria-checked="false">Vacation</button>
+        <button role="radio" data-v="non" aria-checked="false">Non-vacation</button>
+        <button role="radio" data-v="diff" aria-checked="false">Difference</button>
+      </div>
+    </div>
+    <div class="ctl">
+      <span>Data</span>
+      <div class="seg" role="radiogroup" data-key="src">
+        <button role="radio" data-v="obs" aria-checked="true" id="src-obs">Observed</button>
+        <button role="radio" data-v="fc" aria-checked="false" id="src-fc">Forecast</button>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<main class="wrap">
+  <!-- 1. Traffic rhythm -->
+  <section class="block" id="traffic">
+    <div class="block-head">
+      <h2>1 · Traffic rhythm</h2>
+      <p id="traffic-sub" class="sub"></p>
+    </div>
+    <div class="tiles" id="traffic-tiles"></div>
+    <div class="card"><div id="heatmap" class="chart chart-tall"></div></div>
+    <p class="note" id="heatmap-note"></p>
+  </section>
+
+  <!-- 2. Vacation forecast -->
+  <section class="block" id="forecast">
+    <div class="block-head">
+      <h2>2 · Vacation vs non-vacation forecast</h2>
+      <p class="sub" id="forecast-sub"></p>
+    </div>
+    <div class="grid2">
+      <div class="card"><h3>Average departures by hour of day</h3><div id="fc-hours" class="chart"></div></div>
+      <div class="card"><h3>Average daily flights by month</h3><div id="fc-months" class="chart"></div></div>
+    </div>
+    <details class="model-card">
+      <summary>How the forecast works</summary>
+      <div id="traffic-model"></div>
+    </details>
+  </section>
+
+  <!-- 3. Punctuality -->
+  <section class="block" id="punctuality">
+    <div class="block-head">
+      <h2>3 · Punctuality</h2>
+      <p class="sub" id="punct-sub"></p>
+    </div>
+    <div class="tiles" id="punct-tiles"></div>
+    <div class="grid2">
+      <div class="card"><h3 id="otp-title">Route on-time performance (UK CAA)</h3><div id="otp" class="chart"></div></div>
+      <div class="card"><h3 id="atfm-title">Arrival delay heatmap</h3><div id="atfm-heat" class="chart"></div></div>
+    </div>
+  </section>
+
+  <!-- 4. Weather -->
+  <section class="block" id="weather">
+    <div class="block-head">
+      <h2>4 · How weather affects flights</h2>
+      <p class="sub" id="weather-sub"></p>
+    </div>
+    <div class="tiles" id="weather-tiles"></div>
+    <div class="grid2">
+      <div class="card"><h3>Observed delay by wind gusts</h3><div id="bins-gust" class="chart chart-sm"></div></div>
+      <div class="card"><h3>Observed delay by daily rainfall</h3><div id="bins-rain" class="chart chart-sm"></div></div>
+      <div class="card"><h3>Model: delay response to one weather driver</h3>
+        <div class="seg seg-sm" role="radiogroup" data-key="curve">
+          <button role="radio" data-v="gust_kmh" aria-checked="true">Gusts</button>
+          <button role="radio" data-v="precip_mm" aria-checked="false">Rain</button>
+          <button role="radio" data-v="snow_cm" aria-checked="false">Snow</button>
+          <button role="radio" data-v="temp_max" aria-checked="false">Heat</button>
+        </div>
+        <div id="curve" class="chart chart-sm"></div></div>
+      <div class="card"><h3>Model: what-if scenarios</h3><div id="scenarios" class="chart chart-sm"></div></div>
+    </div>
+    <div class="card"><h3>Weekly arrival delay: total vs weather-coded</h3><div id="weekly" class="chart chart-sm"></div></div>
+    <div class="grid2">
+      <div class="card"><h3>Weather share of arrival delay, by airport</h3><div id="share-rank" class="chart chart-tall"></div></div>
+      <div class="card"><h3>What drives delay? (permutation importance)</h3><div id="importance" class="chart chart-tall"></div></div>
+    </div>
+    <details class="model-card">
+      <summary>Delay model card</summary>
+      <div id="delay-model"></div>
+    </details>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <p><strong>Data:</strong> OpenSky Network flight lists (2022), UK Civil Aviation Authority punctuality statistics (2022–2025), EUROCONTROL Aviation Intelligence Portal airport arrival ATFM delay (2022–2024), and weather data by <a href="https://open-meteo.com/">Open-Meteo.com</a> (CC BY 4.0).</p>
+    <p>Departure times are when an aircraft is first seen by ADS-B receivers, converted to the origin airport's local time. OpenSky coverage is partial, so read the traffic heatmaps as relative patterns, not as complete schedules. <span id="generated"></span></p>
+  </div>
+</footer>
+
+<script src="assets/app.js"></script>
+</body>
+</html>

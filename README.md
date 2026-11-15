@@ -2,6 +2,14 @@
 
 **When does Europe fly, and what makes it late?**
 
+### 👉 [Open the live dashboard](https://khubaibahmed.github.io/runway-rhythms/)
+
+Pick any two of 30 airports to see:
+1. **Traffic rhythm heatmaps:** weekday × hour of day, or month × weekday. View them observed (2022) or forecast (2026), for the whole year, vacation days, non-vacation days, or the difference between the two.
+2. **Vacation forecast:** hourly and monthly profiles of a vacation day against a regular day.
+3. **Punctuality:** UK CAA on-time performance for the route (British Airways vs other airlines), plus a month × weekday heatmap of arrival delay at the destination.
+4. **Weather impact:** observed delay by wind and rain bands, model response curves, what-if scenarios, and each airport's weather share of delay.
+
 Runway Rhythms is an operations-analytics project on European air traffic. It covers 30 major UK and EU airports and joins three public data sources:
 
 | Question | Source | Granularity |
